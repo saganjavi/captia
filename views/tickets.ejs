@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Tickets</title>
+    <link rel="stylesheet" href="<%= basePath %>/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="app-header">
+            <h1>Mis Tickets</h1>
+             <nav>
+                <a href="<%= basePath %>/">Escanear</a>
+                <a href="<%= basePath %>/tickets" class="active">Mis Tickets</a>
+            </nav>
+        </header>
+
+        <main>
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Buscar por establecimiento, fecha...">
+            </div>
+
+            <div id="tickets-list">
+                <% if (tickets.length > 0) { %>
+                    <% tickets.forEach(ticket => { %>
+                        <a href="<%= basePath %>/ticket/<%= ticket.id %>" class="ticket-card" data-search-text="<%= (ticket.fields.Establecimiento || '').toLowerCase() %> <%= ticket.fields.Fecha || '' %>">
+                            <div class="ticket-header">
+                                <h3><%= ticket.fields.Establecimiento || 'Sin Establecimiento' %></h3>
+                                <span><%= ticket.fields.Fecha ? new Date(ticket.fields.Fecha).toLocaleDateString('es-ES') : 'Fecha no válida' %></span>
+                            </div>
+                             <div class="ticket-footer">
+                                <strong>Total: <%= (ticket.fields['Total Ticket'] || 0).toFixed(2) %> €</strong>
+                            </div>
+                        </a>
+                    <% }); %>
+                <% } else { %>
+                    <p>Aún no has escaneado ningún ticket.</p>
+                <% } %>
+            </div>
+        </main>
+    </div>
+    <script>
+        document.getElementById('searchInput').addEventListener('keyup', function() {
+            let filter = this.value.toLowerCase();
+            let cards = document.querySelectorAll('.ticket-card');
+
+            cards.forEach(card => {
+                let text = card.getAttribute('data-search-text');
+                if (text.includes(filter)) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

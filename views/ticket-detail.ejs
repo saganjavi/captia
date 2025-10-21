@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale-1.0">
+    <title>Detalle del Ticket - <%= ticket.Establecimiento %></title>
+    <link rel="stylesheet" href="<%= basePath %>/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="app-header">
+            <h1>Detalle del Ticket</h1>
+             <nav>
+                <a href="<%= basePath %>/">Escanear</a>
+                <a href="<%= basePath %>/tickets">Mis Tickets</a>
+            </nav>
+        </header>
+
+        <main class="detail-card">
+            <div class="detail-header">
+                <h2><%= ticket.Establecimiento %></h2>
+                <p>
+                    <strong>Fecha:</strong> 
+                    <%= ticket.Fecha ? new Date(ticket.Fecha).toLocaleDateString('es-ES') : 'No especificada' %>
+                </p>
+            </div>
+            
+            <h3 class="product-list-header">Productos Comprados</h3>
+            <div class="ticket-body">
+                <ul>
+                    <% if (productos.length > 0) { %>
+                        <% productos.forEach(prod => { %>
+                            <li>
+                                <span class="prod-desc"><%= prod.Unidades %> x <%= prod.Producto %></span>
+                                <span class="prod-price"><%= (prod.Total_Linea || 0).toFixed(2) %> €</span>
+                            </li>
+                        <% }); %>
+                    <% } else { %>
+                        <li>No hay productos asociados a este ticket.</li>
+                    <% } %>
+                </ul>
+            </div>
+            <div class="ticket-footer">
+                <strong>Total: <%= (ticket['Total Ticket'] || 0).toFixed(2) %> €</strong>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

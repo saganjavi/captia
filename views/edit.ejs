@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar y Guardar Ticket</title>
+    <link rel="stylesheet" href="<%= basePath %>/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Verifica los Datos</h1>
+            <p>Corrige la información extraída antes de guardarla.</p>
+        </header>
+
+        <main>
+            <form action="<%= basePath %>/save" method="POST" id="edit-form">
+                <div class="form-group">
+                    <label for="establecimiento">Establecimiento</label>
+                    <input type="text" name="establecimiento" value="<%= ticket.establecimiento %>">
+                </div>
+                <div class="form-group">
+                    <label for="fecha">Fecha</label>
+                    <input type="date" name="fecha" value="<%= ticket.fecha %>">
+                </div>
+
+                <h3 class="product-list-header">Productos</h3>
+                <div id="product-list">
+                    <% ticket.productos.forEach((prod, index) => { %>
+                        <div class="product-item">
+                            <input type="text" name="descripcion_<%= index %>" placeholder="Descripción" value="<%= prod.descripcion %>">
+                            <input type="number" step="any" name="unidades_<%= index %>" placeholder="Uds." value="<%= String(prod.unidades).replace(',', '.') %>">
+                            <input type="number" step="any" name="precio_unitario_<%= index %>" placeholder="Precio/Ud." value="<%= String(prod.precio_unitario).replace(',', '.') %>">
+                        </div>
+                    <% }); %>
+                </div>
+                
+                <button type="submit" class="save-btn">✅ Guardar Ticket</button>
+            </form>
+        </main>
+    </div>
+</body>
+</html>

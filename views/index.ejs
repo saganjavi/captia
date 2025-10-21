@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale-1.0">
+    <title>Escaner de Tickets - Captia</title>
+    <link rel="stylesheet" href="<%= basePath %>/css/style.css">
+</head>
+<body>
+
+    <div class="main-container">
+        <header class="app-header">
+            <h1>CAPTia</h1>
+            <nav>
+                <a href="<%= basePath %>/" class="active">Escanear</a>
+                <a href="<%= basePath %>/tickets">Mis Tickets</a>
+            </nav>
+        </header>
+
+        <main class="scanner-ui">
+            <div class="scanner-card">
+                <p class="scanner-instructions">Selecciona un método para digitalizar tu ticket.</p>
+                
+                <div id="camera-container">
+                    <video id="camera-stream" autoplay playsinline></video>
+                    <button id="take-photo-btn">📸 Tomar Foto</button>
+                    <canvas id="canvas" style="display:none;"></canvas>
+                </div>
+
+                <div class="action-buttons">
+                    <button id="activate-camera-btn">📷 Activar Cámara</button>
+                    <button id="upload-btn" type="button">📂 Subir Archivo</button>
+                </div>
+            </div>
+        </main>
+        
+        <form id="upload-form" action="<%= basePath %>/upload" method="POST" enctype="multipart/form-data" style="display:none;">
+            <input type="file" name="ticketImage" id="image-input" accept="image/*">
+        </form>
+    </div>
+
+    <div id="loading-overlay" class="hidden">
+        <div class="spinner"></div>
+        <p>Procesando ticket...</p>
+    </div>
+
+    <script src="<%= basePath %>/js/app.js"></script>
+</body>
+</html>

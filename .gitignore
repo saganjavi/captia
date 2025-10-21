@@ -1,0 +1,16 @@
+# Dependencias
+# Ignoramos la carpeta node_modules porque se puede regenerar con 'npm install'
+/node_modules
+
+# Archivos de entorno
+# ¡MUY IMPORTANTE! Contiene claves secretas y contraseñas.
+# Nunca debe subirse a un repositorio.
+.env
+
+# Archivos de registro (Logs)
+*.log
+npm-debug.log*
+
+# Archivos generados por el sistema operativo
+.DS_Store
+Thumbs.db
