@@ -143,12 +143,22 @@ app.get(`${basePath}/tickets`, requireLogin, async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const perPage = 10;
 
-        const tickets = await base(process.env.AIRTABLE_TICKETS_TABLE).select({
+        // 1. Obtener TODOS los tickets (solo metadata, sin productos - rápido)
+        const allTickets = await base(process.env.AIRTABLE_TICKETS_TABLE).select({
             sort: [{ field: "Fecha", direction: "desc" }]
         }).all();
 
-        // Calcular el total de cada ticket
-        const ticketsWithTotal = await Promise.all(tickets.map(async (ticket) => {
+        // 2. Calcular paginación
+        const totalTickets = allTickets.length;
+        const totalPages = Math.ceil(totalTickets / perPage);
+        const startIndex = (page - 1) * perPage;
+        const endIndex = startIndex + perPage;
+
+        // 3. Obtener SOLO los tickets de la página actual
+        const ticketsForPage = allTickets.slice(startIndex, endIndex);
+
+        // 4. Calcular totales SOLO para los tickets de esta página
+        const ticketsWithTotal = await Promise.all(ticketsForPage.map(async (ticket) => {
             let total = 0;
             if (ticket.fields.Productos && ticket.fields.Productos.length > 0) {
                 const lineasPromises = ticket.fields.Productos.map(id =>
@@ -167,15 +177,8 @@ app.get(`${basePath}/tickets`, requireLogin, async (req, res) => {
             };
         }));
 
-        // Paginación
-        const totalTickets = ticketsWithTotal.length;
-        const totalPages = Math.ceil(totalTickets / perPage);
-        const startIndex = (page - 1) * perPage;
-        const endIndex = startIndex + perPage;
-        const paginatedTickets = ticketsWithTotal.slice(startIndex, endIndex);
-
         res.render('tickets', {
-            tickets: paginatedTickets,
+            tickets: ticketsWithTotal,
             pagination: {
                 currentPage: page,
                 totalPages: totalPages,
