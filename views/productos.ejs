@@ -9,8 +9,13 @@
 <body>
     <div class="container">
         <header class="app-header">
-            <h1>Buscar Productos</h1>
-            <nav>
+            <h1>CAPTia</h1>
+            <button class="menu-toggle" id="menuToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <nav id="mainNav">
                 <a href="<%= basePath %>/">Escanear</a>
                 <a href="<%= basePath %>/tickets">Mis Tickets</a>
                 <a href="<%= basePath %>/productos" class="active">Productos</a>
@@ -37,6 +42,17 @@
     </div>
 
     <script>
+        // Mobile menu toggle
+        const menuToggle = document.getElementById('menuToggle');
+        const mainNav = document.getElementById('mainNav');
+
+        if (menuToggle) {
+            menuToggle.addEventListener('click', function() {
+                this.classList.toggle('active');
+                mainNav.classList.toggle('active');
+            });
+        }
+
         let searchTimeout;
         const searchInput = document.getElementById('productSearch');
         const productosList = document.getElementById('productos-list');
