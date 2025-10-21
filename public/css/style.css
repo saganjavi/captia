@@ -500,3 +500,74 @@ body {
         gap: 2rem;
     }
 }
+
+/* Pagination Styles */
+.pagination {
+    margin-top: 2rem;
+    padding: 1.5rem 0;
+    border-top: 1px solid var(--border-color);
+}
+
+.pagination-info {
+    text-align: center;
+    color: var(--text-light);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.pagination-buttons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.pagination-btn {
+    display: inline-block;
+    padding: 0.5rem 0.875rem;
+    min-width: 40px;
+    text-align: center;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-color);
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.pagination-btn:hover:not(.disabled):not(.active) {
+    background-color: var(--bg-color);
+    border-color: var(--primary-blue);
+    color: var(--primary-blue);
+}
+
+.pagination-btn.active {
+    background-color: var(--primary-blue);
+    color: #fff;
+    border-color: var(--primary-blue);
+    cursor: default;
+}
+
+.pagination-btn.disabled {
+    color: var(--text-light);
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Media Queries for Pagination */
+@media (max-width: 767px) {
+    .pagination-buttons {
+        gap: 0.25rem;
+    }
+
+    .pagination-btn {
+        padding: 0.375rem 0.625rem;
+        min-width: 36px;
+        font-size: 0.875rem;
+    }
+}
