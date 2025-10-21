@@ -140,6 +140,9 @@ app.get(`${basePath}/ticket/:id`, requireLogin, async (req, res) => {
 // Ruta para ver todos los tickets
 app.get(`${basePath}/tickets`, requireLogin, async (req, res) => {
     try {
+        const page = parseInt(req.query.page) || 1;
+        const perPage = 10;
+
         const tickets = await base(process.env.AIRTABLE_TICKETS_TABLE).select({
             sort: [{ field: "Fecha", direction: "desc" }]
         }).all();
@@ -164,7 +167,23 @@ app.get(`${basePath}/tickets`, requireLogin, async (req, res) => {
             };
         }));
 
-        res.render('tickets', { tickets: ticketsWithTotal });
+        // Paginación
+        const totalTickets = ticketsWithTotal.length;
+        const totalPages = Math.ceil(totalTickets / perPage);
+        const startIndex = (page - 1) * perPage;
+        const endIndex = startIndex + perPage;
+        const paginatedTickets = ticketsWithTotal.slice(startIndex, endIndex);
+
+        res.render('tickets', {
+            tickets: paginatedTickets,
+            pagination: {
+                currentPage: page,
+                totalPages: totalPages,
+                totalTickets: totalTickets,
+                hasNextPage: page < totalPages,
+                hasPrevPage: page > 1
+            }
+        });
     } catch (err) {
         console.error("Error al obtener los tickets:", err);
         res.status(500).send("Error al obtener los tickets de Airtable.");
