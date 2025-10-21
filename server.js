@@ -2,7 +2,8 @@
 require('dotenv').config();
 const express = require('express');
 const multer = require('multer');
-const session = require('express-session');
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const Airtable = require('airtable');
 
@@ -16,12 +17,7 @@ app.set('view engine', 'ejs');
 app.use(basePath, express.static('public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false }
-}));
+app.use(cookieParser());
 
 // Pasar basePath a todas las plantillas
 app.use((req, res, next) => {
@@ -40,8 +36,15 @@ const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(process
 
 // 3. Middleware de Autenticación
 const requireLogin = (req, res, next) => {
-    if (req.session.loggedIn) next();
-    else res.redirect(`${basePath}/login`);
+    const token = req.cookies.authToken;
+    if (!token) return res.redirect(`${basePath}/login`);
+
+    try {
+        jwt.verify(token, process.env.SESSION_SECRET);
+        next();
+    } catch (error) {
+        res.redirect(`${basePath}/login`);
+    }
 };
 
 // 4. Rutas de la Aplicación
@@ -51,14 +54,20 @@ const requireLogin = (req, res, next) => {
 app.get(`${basePath}/login`, (req, res) => res.render('login', { error: null }));
 app.post(`${basePath}/login`, (req, res) => {
     if (req.body.password === process.env.APP_PASSWORD) {
-        req.session.loggedIn = true;
+        const token = jwt.sign({ loggedIn: true }, process.env.SESSION_SECRET, { expiresIn: '7d' });
+        res.cookie('authToken', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 días
+        });
         res.redirect(`${basePath}/`);
     } else {
         res.render('login', { error: 'Contraseña incorrecta.' });
     }
 });
 app.get(`${basePath}/logout`, (req, res) => {
-    req.session.destroy(() => res.redirect(`${basePath}/login`));
+    res.clearCookie('authToken');
+    res.redirect(`${basePath}/login`);
 });
 
 // Ruta principal y de subida
