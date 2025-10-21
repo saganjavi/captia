@@ -125,15 +125,53 @@ app.get(`${basePath}/ticket/:id`, requireLogin, async (req, res) => {
     try {
         const ticket = await base(process.env.AIRTABLE_TICKETS_TABLE).find(req.params.id);
         const lineas_ticket = [];
+        let total = 0;
+
         if (ticket.get('Productos')) {
             const lineasPromises = ticket.get('Productos').map(id => base(process.env.AIRTABLE_LINES_TABLE).find(id));
             const resolvedLineas = await Promise.all(lineasPromises);
-            resolvedLineas.forEach(linea => lineas_ticket.push(linea.fields));
+            resolvedLineas.forEach(linea => {
+                lineas_ticket.push(linea.fields);
+                // Calcular total sumando (Unidades * Precio_Unitario) de cada producto
+                const unidades = linea.fields.Unidades || 0;
+                const precioUnitario = linea.fields.Precio_Unitario || 0;
+                total += unidades * precioUnitario;
+            });
         }
-        res.render('ticket-detail', { ticket: { id: ticket.id, ...ticket.fields }, productos: lineas_ticket });
+
+        res.render('ticket-detail', {
+            ticket: { id: ticket.id, ...ticket.fields, total: total },
+            productos: lineas_ticket
+        });
     } catch (error) {
         console.error("Error al obtener el detalle del ticket:", error);
         res.status(404).send("Ticket no encontrado.");
+    }
+});
+
+// Ruta para borrar un ticket
+app.post(`${basePath}/ticket/:id/delete`, requireLogin, async (req, res) => {
+    try {
+        const ticketId = req.params.id;
+        const ticket = await base(process.env.AIRTABLE_TICKETS_TABLE).find(ticketId);
+
+        // Borrar primero todos los productos asociados al ticket
+        if (ticket.get('Productos') && ticket.get('Productos').length > 0) {
+            const productIds = ticket.get('Productos');
+            // Airtable permite borrar hasta 10 registros a la vez
+            for (let i = 0; i < productIds.length; i += 10) {
+                const chunk = productIds.slice(i, i + 10);
+                await base(process.env.AIRTABLE_LINES_TABLE).destroy(chunk);
+            }
+        }
+
+        // Luego borrar el ticket
+        await base(process.env.AIRTABLE_TICKETS_TABLE).destroy(ticketId);
+
+        res.redirect(`${basePath}/tickets`);
+    } catch (error) {
+        console.error("Error al borrar el ticket:", error);
+        res.status(500).send("Error al borrar el ticket.");
     }
 });
 
@@ -142,13 +180,35 @@ app.get(`${basePath}/tickets`, requireLogin, async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const perPage = 10;
+        const searchQuery = req.query.search || '';
 
-        const tickets = await base(process.env.AIRTABLE_TICKETS_TABLE).select({
+        // 1. Obtener TODOS los tickets (solo metadata, sin productos - rápido)
+        const allTickets = await base(process.env.AIRTABLE_TICKETS_TABLE).select({
             sort: [{ field: "Fecha", direction: "desc" }]
         }).all();
 
-        // Calcular el total de cada ticket
-        const ticketsWithTotal = await Promise.all(tickets.map(async (ticket) => {
+        // 2. Filtrar por búsqueda si existe
+        let filteredTickets = allTickets;
+        if (searchQuery.trim().length > 0) {
+            const searchLower = searchQuery.toLowerCase();
+            filteredTickets = allTickets.filter(ticket => {
+                const establecimiento = (ticket.fields.Establecimiento || '').toLowerCase();
+                const fecha = ticket.fields.Fecha || '';
+                return establecimiento.includes(searchLower) || fecha.includes(searchLower);
+            });
+        }
+
+        // 3. Calcular paginación
+        const totalTickets = filteredTickets.length;
+        const totalPages = Math.ceil(totalTickets / perPage);
+        const startIndex = (page - 1) * perPage;
+        const endIndex = startIndex + perPage;
+
+        // 4. Obtener SOLO los tickets de la página actual
+        const ticketsForPage = filteredTickets.slice(startIndex, endIndex);
+
+        // 5. Calcular totales SOLO para los tickets de esta página
+        const ticketsWithTotal = await Promise.all(ticketsForPage.map(async (ticket) => {
             let total = 0;
             if (ticket.fields.Productos && ticket.fields.Productos.length > 0) {
                 const lineasPromises = ticket.fields.Productos.map(id =>
@@ -167,15 +227,9 @@ app.get(`${basePath}/tickets`, requireLogin, async (req, res) => {
             };
         }));
 
-        // Paginación
-        const totalTickets = ticketsWithTotal.length;
-        const totalPages = Math.ceil(totalTickets / perPage);
-        const startIndex = (page - 1) * perPage;
-        const endIndex = startIndex + perPage;
-        const paginatedTickets = ticketsWithTotal.slice(startIndex, endIndex);
-
         res.render('tickets', {
-            tickets: paginatedTickets,
+            tickets: ticketsWithTotal,
+            searchQuery: searchQuery,
             pagination: {
                 currentPage: page,
                 totalPages: totalPages,
