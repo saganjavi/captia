@@ -1,0 +1,139 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Overview
+
+**Captia** is a ticket scanner web application that uses AI to digitize purchase receipts. Users can upload or capture ticket images, which are processed using Google Gemini AI to extract product information, then saved to Airtable for record-keeping.
+
+**Language Note**: The application UI, comments, and user-facing content are in Spanish.
+
+## Technology Stack
+
+- **Backend**: Node.js (v20) with Express.js
+- **Templating**: EJS
+- **AI Processing**: Google Gemini API (gemini-1.5-flash model)
+- **Database**: Airtable (two tables: Tickets and Products/Lines)
+- **Authentication**: Express sessions with password protection
+- **File Handling**: Multer (memory storage)
+
+## Development Commands
+
+```bash
+# Install dependencies
+npm install
+
+# Start the server (development/production)
+npm start
+
+# Server runs on PORT environment variable or defaults to 3000
+```
+
+**Note**: There are currently no tests configured. The `npm test` command will fail.
+
+## Environment Setup
+
+This application requires a `.env` file with the following variables:
+
+**Required:**
+- `GEMINI_API_KEY` - Google Gemini API key for image processing
+- `AIRTABLE_API_KEY` - Airtable API key
+- `AIRTABLE_BASE_ID` - Airtable base ID
+- `AIRTABLE_TICKETS_TABLE` - Name of the tickets table in Airtable
+- `AIRTABLE_LINES_TABLE` - Name of the products/lines table in Airtable
+- `APP_PASSWORD` - Simple password for application access
+- `SESSION_SECRET` - Secret for session encryption
+- `GEMINI_PROMPT` - The prompt sent to Gemini AI for ticket data extraction (should instruct the model to return JSON with ticket structure)
+
+**Optional:**
+- `PORT` - Server port (default: 3000)
+- `BASE_PATH` - Base path for deployment under a subdirectory (e.g., '/captia')
+
+## Architecture
+
+### Application Flow
+
+1. **Authentication** (`/login`, `/logout`):
+   - Simple password-based session authentication
+   - `requireLogin` middleware protects all main routes
+
+2. **Ticket Scanning** (`/`, `/upload`):
+   - Main page (`index.ejs`) provides camera capture and file upload options
+   - Client-side JS (`public/js/app.js`) handles camera access and image capture
+   - POST to `/upload` sends image to Gemini AI
+   - AI extracts structured ticket data (establishment, date, products with units and prices)
+
+3. **Data Editing** (`edit.ejs`):
+   - User reviews and corrects AI-extracted data before saving
+   - Form submission goes to `/save`
+
+4. **Data Storage** (`/save`):
+   - Creates ticket record in Airtable Tickets table
+   - Creates linked product records in Airtable Lines table (batched in chunks of 10)
+   - Products are linked to parent ticket via Airtable record ID
+
+5. **Viewing Tickets** (`/tickets`, `/ticket/:id`):
+   - List all tickets sorted by date (descending)
+   - View individual ticket details with all product lines
+
+### Key Files
+
+- **server.js**: Main application file containing all routes and business logic
+- **views/*.ejs**: EJS templates with `basePath` support for flexible deployment
+- **public/js/app.js**: Camera/upload UI interactions
+- **public/css/style.css**: Application styling
+
+### Data Model
+
+**Tickets Table (Airtable):**
+- Establecimiento (string) - Store name
+- Fecha (date) - Purchase date
+- Productos (linked records) - References to Lines table
+
+**Lines Table (Airtable):**
+- Producto (string) - Product description
+- Unidades (number) - Quantity
+- Precio_Unitario (number) - Unit price
+- Ticket (linked record) - Reference to parent ticket
+
+### BASE_PATH Support
+
+The application supports deployment under a subdirectory path via the `BASE_PATH` environment variable. All routes and static file serving are prefixed with this path. Templates receive `basePath` via `res.locals` for constructing links.
+
+## Common Development Patterns
+
+### Adding New Routes
+
+All routes should:
+1. Be prefixed with `basePath` template literal
+2. Include `requireLogin` middleware if they require authentication
+3. Handle errors and redirect/render appropriate error pages
+
+Example:
+```javascript
+app.get(`${basePath}/new-route`, requireLogin, (req, res) => {
+    // Route logic
+});
+```
+
+### Modifying AI Extraction
+
+To change what data is extracted from tickets, modify:
+1. The `GEMINI_PROMPT` environment variable to adjust AI instructions
+2. The `edit.ejs` template to match new data structure
+3. The `/save` route to handle new fields when saving to Airtable
+4. Airtable table schema if adding new columns
+
+### Working with Airtable
+
+- The application uses Airtable's JavaScript SDK
+- Batch operations are limited to 10 records per request (see `/save` route for chunking example)
+- Linked records use Airtable record IDs in array format
+
+## Architecture Considerations
+
+- **Single Server File**: All backend logic is in `server.js`. For larger features, consider extracting routes, middleware, or services into separate modules.
+- **No Database Migrations**: Airtable schema changes must be done manually in the Airtable UI.
+- **Session Storage**: Currently uses in-memory session storage (will reset on server restart). For production, consider using a session store like Redis.
+- **File Storage**: Images are processed in memory and not persisted. Original ticket images are not stored anywhere.
+- **Error Handling**: Most routes have basic try/catch blocks. Consider implementing more structured error handling and logging for production.
