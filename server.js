@@ -1,6 +1,7 @@
 // 1. Importaciones y Configuración
 require('dotenv').config();
 const express = require('express');
+const path = require('path');
 const multer = require('multer');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
@@ -8,13 +9,14 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const Airtable = require('airtable');
 
 const app = express();
-const PORT = process.env.PORT || 3000; 
+const PORT = process.env.PORT || 3000;
 const basePath = process.env.BASE_PATH || '';
 
 // Configurar Express y Middlewares
 app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 // CORRECCIÓN: Servir archivos estáticos bajo la ruta base
-app.use(basePath, express.static('public'));
+app.use(basePath, express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
