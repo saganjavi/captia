@@ -14,7 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Templating**: EJS
 - **AI Processing**: Google Gemini API (gemini-1.5-flash model)
 - **Database**: Airtable (two tables: Tickets and Products/Lines)
-- **Authentication**: Express sessions with password protection
+- **Authentication**: JWT-based authentication with httpOnly cookies
 - **File Handling**: Multer (memory storage)
 
 ## Development Commands
@@ -54,8 +54,9 @@ This application requires a `.env` file with the following variables:
 ### Application Flow
 
 1. **Authentication** (`/login`, `/logout`):
-   - Simple password-based session authentication
-   - `requireLogin` middleware protects all main routes
+   - Simple password-based JWT authentication stored in httpOnly cookies
+   - JWT tokens are valid for 7 days
+   - `requireLogin` middleware verifies JWT and protects all main routes
 
 2. **Ticket Scanning** (`/`, `/upload`):
    - Main page (`index.ejs`) provides camera capture and file upload options
@@ -134,6 +135,49 @@ To change what data is extracted from tickets, modify:
 
 - **Single Server File**: All backend logic is in `server.js`. For larger features, consider extracting routes, middleware, or services into separate modules.
 - **No Database Migrations**: Airtable schema changes must be done manually in the Airtable UI.
-- **Session Storage**: Currently uses in-memory session storage (will reset on server restart). For production, consider using a session store like Redis.
+- **JWT Authentication**: Uses stateless JWT tokens in httpOnly cookies, making it compatible with serverless environments like Vercel.
 - **File Storage**: Images are processed in memory and not persisted. Original ticket images are not stored anywhere.
 - **Error Handling**: Most routes have basic try/catch blocks. Consider implementing more structured error handling and logging for production.
+
+## Deployment
+
+### Vercel (Serverless)
+
+The application is fully compatible with Vercel's serverless platform:
+
+1. **Configuration**: `vercel.json` routes all requests to `server.js`
+2. **Authentication**: JWT-based auth works seamlessly in serverless environment
+3. **Environment Variables**: Configure all required environment variables in Vercel dashboard (Settings → Environment Variables)
+4. **Important**: Set `NODE_ENV=production` in Vercel to enable secure cookies
+
+**Required Environment Variables for Vercel:**
+- All variables listed in "Environment Setup" section above
+- `NODE_ENV=production` (for secure cookie settings)
+
+**Deployment Steps:**
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Deploy
+vercel
+```
+
+### Standard Web Server (VPS, Dedicated)
+
+For traditional server deployment:
+
+1. **Requirements**: Node.js v20+
+2. **Setup**: Configure environment variables in `.env` file or server environment
+3. **Start**: `npm start` or use process manager like PM2
+4. **Reverse Proxy**: Recommended to use Nginx or Apache as reverse proxy
+
+**Example with PM2:**
+```bash
+npm install -g pm2
+pm2 start server.js --name captia
+pm2 save
+pm2 startup
+```
+
+**Note**: JWT authentication works identically on both Vercel and standard servers.
