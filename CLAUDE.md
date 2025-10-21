@@ -89,9 +89,9 @@ This application requires a `.env` file with the following variables:
 **Tickets Table (Airtable):**
 - Establecimiento (string) - Store name
 - Fecha (date) - Purchase date
-- Productos (linked records) - References to Lines table
+- Productos (linked records) - References to Lineas_Ticket table
 
-**Lines Table (Airtable):**
+**Lineas_Ticket Table (Airtable):**
 - Producto (string) - Product description
 - Unidades (number) - Quantity
 - Precio_Unitario (number) - Unit price

@@ -143,7 +143,28 @@ app.get(`${basePath}/tickets`, requireLogin, async (req, res) => {
         const tickets = await base(process.env.AIRTABLE_TICKETS_TABLE).select({
             sort: [{ field: "Fecha", direction: "desc" }]
         }).all();
-        res.render('tickets', { tickets: tickets });
+
+        // Calcular el total de cada ticket
+        const ticketsWithTotal = await Promise.all(tickets.map(async (ticket) => {
+            let total = 0;
+            if (ticket.fields.Productos && ticket.fields.Productos.length > 0) {
+                const lineasPromises = ticket.fields.Productos.map(id =>
+                    base(process.env.AIRTABLE_LINES_TABLE).find(id)
+                );
+                const lineas = await Promise.all(lineasPromises);
+                total = lineas.reduce((sum, linea) => {
+                    const unidades = linea.fields.Unidades || 0;
+                    const precio = linea.fields.Precio_Unitario || 0;
+                    return sum + (unidades * precio);
+                }, 0);
+            }
+            return {
+                ...ticket,
+                total: total
+            };
+        }));
+
+        res.render('tickets', { tickets: ticketsWithTotal });
     } catch (err) {
         console.error("Error al obtener los tickets:", err);
         res.status(500).send("Error al obtener los tickets de Airtable.");

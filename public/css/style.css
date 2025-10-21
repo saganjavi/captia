@@ -188,9 +188,211 @@ body {
     100% { transform: rotate(360deg); }
 }
 
+/* Login Styles */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    width: 100%;
+}
+
+.login-card {
+    background-color: var(--card-bg);
+    padding: 3rem 2rem;
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    width: 100%;
+    max-width: 420px;
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.login-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-blue);
+    margin-bottom: 0.5rem;
+}
+
+.login-header p {
+    font-size: 1rem;
+    color: var(--text-light);
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.form-group input {
+    padding: 0.875rem 1rem;
+    font-size: 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    transition: border-color 0.2s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+}
+
+.btn-login {
+    padding: 1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #fff;
+    background-color: var(--primary-blue);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.btn-login:hover {
+    background-color: var(--primary-blue-hover);
+}
+
+.btn-login:active {
+    transform: scale(0.98);
+}
+
+.error-message {
+    color: #dc2626;
+    font-size: 0.9rem;
+    text-align: center;
+    padding: 0.75rem;
+    background-color: #fee2e2;
+    border-radius: 8px;
+    margin: 0;
+}
+
+/* Tickets List Styles */
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+.search-bar {
+    margin-bottom: 1.5rem;
+}
+
+.search-bar input {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    font-size: 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    transition: border-color 0.2s ease;
+}
+
+.search-bar input:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+}
+
+#tickets-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.ticket-card {
+    display: block;
+    background-color: var(--card-bg);
+    padding: 1.25rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    text-decoration: none;
+    color: var(--text-color);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid var(--border-color);
+}
+
+.ticket-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.ticket-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.ticket-establecimiento {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.ticket-fecha {
+    font-size: 0.95rem;
+    color: var(--text-light);
+}
+
+.ticket-total {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary-blue);
+}
+
+.no-tickets {
+    text-align: center;
+    color: var(--text-light);
+    padding: 3rem 1rem;
+    font-size: 1.1rem;
+}
+
 /* Media Queries */
 @media (min-width: 768px) {
     .action-buttons {
         grid-template-columns: 1fr 1fr;
+    }
+
+    /* Layout horizontal para tablets y desktop */
+    .ticket-info {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .ticket-establecimiento {
+        flex: 1;
+    }
+
+    .ticket-fecha {
+        flex: 0 0 auto;
+        min-width: 120px;
+        text-align: center;
+    }
+
+    .ticket-total {
+        flex: 0 0 auto;
+        min-width: 120px;
+        text-align: right;
     }
 }

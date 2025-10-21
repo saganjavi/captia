@@ -24,18 +24,19 @@
             <div id="tickets-list">
                 <% if (tickets.length > 0) { %>
                     <% tickets.forEach(ticket => { %>
-                        <a href="<%= basePath %>/ticket/<%= ticket.id %>" class="ticket-card" data-search-text="<%= (ticket.fields.Establecimiento || '').toLowerCase() %> <%= ticket.fields.Fecha || '' %>">
-                            <div class="ticket-header">
-                                <h3><%= ticket.fields.Establecimiento || 'Sin Establecimiento' %></h3>
-                                <span><%= ticket.fields.Fecha ? new Date(ticket.fields.Fecha).toLocaleDateString('es-ES') : 'Fecha no válida' %></span>
-                            </div>
-                             <div class="ticket-footer">
-                                <strong>Total: <%= (ticket.fields['Total Ticket'] || 0).toFixed(2) %> €</strong>
+                        <a href="<%= basePath %>/ticket/<%= ticket.id %>"
+                           class="ticket-card"
+                           data-search-text="<%= (ticket.fields.Establecimiento || '').toLowerCase() %> <%= ticket.fields.Fecha || '' %>"
+                           data-fecha="<%= ticket.fields.Fecha || '' %>">
+                            <div class="ticket-info">
+                                <span class="ticket-establecimiento"><%= ticket.fields.Establecimiento || 'Sin Establecimiento' %></span>
+                                <span class="ticket-fecha"><%= ticket.fields.Fecha ? new Date(ticket.fields.Fecha).toLocaleDateString('es-ES') : 'Fecha no válida' %></span>
+                                <span class="ticket-total"><%= (ticket.total || 0).toFixed(2) %> €</span>
                             </div>
                         </a>
                     <% }); %>
                 <% } else { %>
-                    <p>Aún no has escaneado ningún ticket.</p>
+                    <p class="no-tickets">Aún no has escaneado ningún ticket.</p>
                 <% } %>
             </div>
         </main>
@@ -43,14 +44,35 @@
     <script>
         document.getElementById('searchInput').addEventListener('keyup', function() {
             let filter = this.value.toLowerCase();
-            let cards = document.querySelectorAll('.ticket-card');
+            let ticketsList = document.getElementById('tickets-list');
+            let cards = Array.from(document.querySelectorAll('.ticket-card'));
 
-            cards.forEach(card => {
+            // Filtrar y ordenar
+            let filteredCards = cards.filter(card => {
                 let text = card.getAttribute('data-search-text');
-                if (text.includes(filter)) {
-                    card.style.display = '';
-                } else {
-                    card.style.display = 'none';
+                return text.includes(filter);
+            });
+
+            // Ordenar por fecha descendente (más recientes primero)
+            filteredCards.sort((a, b) => {
+                let dateA = new Date(a.getAttribute('data-fecha'));
+                let dateB = new Date(b.getAttribute('data-fecha'));
+                return dateB - dateA; // Orden descendente
+            });
+
+            // Ocultar todas las tarjetas primero
+            cards.forEach(card => card.style.display = 'none');
+
+            // Reorganizar el DOM con las tarjetas filtradas y ordenadas
+            filteredCards.forEach(card => {
+                card.style.display = '';
+                ticketsList.appendChild(card);
+            });
+
+            // Añadir al final las tarjetas que no coinciden (ocultas)
+            cards.forEach(card => {
+                if (!filteredCards.includes(card)) {
+                    ticketsList.appendChild(card);
                 }
             });
         });
