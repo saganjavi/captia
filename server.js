@@ -171,6 +171,64 @@ app.get(`${basePath}/tickets`, requireLogin, async (req, res) => {
     }
 });
 
+// Ruta de búsqueda de productos
+app.get(`${basePath}/productos`, requireLogin, (req, res) => {
+    res.render('productos');
+});
+
+// API de búsqueda de productos (AJAX)
+app.get(`${basePath}/api/productos/buscar`, requireLogin, async (req, res) => {
+    try {
+        const query = req.query.q || '';
+
+        if (query.length < 2) {
+            return res.json({ resultados: [] });
+        }
+
+        // Buscar todas las líneas que coincidan con el producto
+        const lineas = await base(process.env.AIRTABLE_LINES_TABLE).select({
+            filterByFormula: `SEARCH(LOWER("${query.replace(/"/g, '\\"')}"), LOWER({Producto})) > 0`
+        }).all();
+
+        // Cache para evitar consultas duplicadas de tickets
+        const ticketsCache = {};
+
+        // Obtener información completa de cada línea con su ticket
+        const resultados = await Promise.all(lineas.map(async (linea) => {
+            const ticketId = linea.fields.Ticket ? linea.fields.Ticket[0] : null;
+
+            if (!ticketId) return null;
+
+            // Usar cache para evitar consultas duplicadas
+            if (!ticketsCache[ticketId]) {
+                ticketsCache[ticketId] = await base(process.env.AIRTABLE_TICKETS_TABLE).find(ticketId);
+            }
+
+            const ticket = ticketsCache[ticketId];
+
+            return {
+                producto: linea.fields.Producto || 'Sin nombre',
+                fecha: ticket.fields.Fecha || null,
+                precioUnitario: linea.fields.Precio_Unitario || 0,
+                unidades: linea.fields.Unidades || 0,
+                ticketId: ticketId,
+                establecimiento: ticket.fields.Establecimiento || 'Sin establecimiento'
+            };
+        }));
+
+        // Filtrar resultados nulos y ordenar por fecha descendente
+        const resultadosFiltrados = resultados
+            .filter(r => r !== null && r.fecha !== null)
+            .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
+            .slice(0, 15); // Límite de 15 resultados
+
+        res.json({ resultados: resultadosFiltrados });
+    } catch (err) {
+        console.error("Error al buscar productos:", err);
+        res.status(500).json({ error: "Error al buscar productos" });
+    }
+});
+
 // 5. Iniciar Servidor
 app.listen(PORT, () => {
     console.log(`🚀 Servidor escuchando en el puerto ${PORT}`);

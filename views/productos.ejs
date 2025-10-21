@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscar Productos - Captia</title>
+    <link rel="stylesheet" href="<%= basePath %>/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="app-header">
+            <h1>Buscar Productos</h1>
+            <nav>
+                <a href="<%= basePath %>/">Escanear</a>
+                <a href="<%= basePath %>/tickets">Mis Tickets</a>
+                <a href="<%= basePath %>/productos" class="active">Productos</a>
+            </nav>
+        </header>
+
+        <main>
+            <div class="search-bar">
+                <input type="text" id="productSearch" placeholder="Buscar producto..." autocomplete="off">
+            </div>
+
+            <div id="search-info" class="search-info hidden">
+                Mostrando <span id="result-count">0</span> resultados
+            </div>
+
+            <div id="productos-list">
+                <p class="no-results">Escribe para buscar productos en tus tickets.</p>
+            </div>
+
+            <div id="loading-search" class="hidden">
+                <div class="spinner-small"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let searchTimeout;
+        const searchInput = document.getElementById('productSearch');
+        const productosList = document.getElementById('productos-list');
+        const loadingIndicator = document.getElementById('loading-search');
+        const searchInfo = document.getElementById('search-info');
+        const resultCount = document.getElementById('result-count');
+
+        searchInput.addEventListener('keyup', function() {
+            clearTimeout(searchTimeout);
+            const query = this.value.trim();
+
+            if (query.length === 0) {
+                productosList.innerHTML = '<p class="no-results">Escribe para buscar productos en tus tickets.</p>';
+                searchInfo.classList.add('hidden');
+                return;
+            }
+
+            if (query.length < 2) {
+                productosList.innerHTML = '<p class="no-results">Escribe al menos 2 caracteres para buscar.</p>';
+                searchInfo.classList.add('hidden');
+                return;
+            }
+
+            // Búsqueda en tiempo real con delay de 500ms
+            searchTimeout = setTimeout(() => {
+                buscarProductos(query);
+            }, 500);
+        });
+
+        async function buscarProductos(query) {
+            loadingIndicator.classList.remove('hidden');
+            productosList.innerHTML = '';
+
+            try {
+                const response = await fetch(`<%= basePath %>/api/productos/buscar?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+
+                loadingIndicator.classList.add('hidden');
+
+                if (data.resultados.length === 0) {
+                    productosList.innerHTML = '<p class="no-results">No se encontraron productos con ese nombre.</p>';
+                    searchInfo.classList.add('hidden');
+                    return;
+                }
+
+                // Mostrar información de resultados
+                resultCount.textContent = data.resultados.length;
+                searchInfo.classList.remove('hidden');
+
+                // Renderizar resultados
+                data.resultados.forEach(item => {
+                    const card = document.createElement('a');
+                    card.href = `<%= basePath %>/ticket/${item.ticketId}`;
+                    card.className = 'producto-card';
+
+                    const fecha = new Date(item.fecha).toLocaleDateString('es-ES');
+
+                    card.innerHTML = `
+                        <div class="producto-info">
+                            <span class="producto-nombre">${item.producto}</span>
+                            <span class="producto-establecimiento">${item.establecimiento}</span>
+                            <div class="producto-detalles">
+                                <span class="producto-fecha">${fecha}</span>
+                                <span class="producto-precio">${item.precioUnitario.toFixed(2)} €</span>
+                            </div>
+                        </div>
+                    `;
+
+                    productosList.appendChild(card);
+                });
+            } catch (error) {
+                loadingIndicator.classList.add('hidden');
+                productosList.innerHTML = '<p class="error-message">Error al buscar productos. Intenta nuevamente.</p>';
+                console.error('Error:', error);
+            }
+        }
+
+        // Focus automático en el buscador
+        searchInput.focus();
+    </script>
+</body>
+</html>
