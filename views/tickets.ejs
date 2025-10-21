@@ -25,17 +25,15 @@
                 <% if (tickets.length > 0) { %>
                     <% tickets.forEach(ticket => { %>
                         <a href="<%= basePath %>/ticket/<%= ticket.id %>" class="ticket-card" data-search-text="<%= (ticket.fields.Establecimiento || '').toLowerCase() %> <%= ticket.fields.Fecha || '' %>">
-                            <div class="ticket-header">
-                                <h3><%= ticket.fields.Establecimiento || 'Sin Establecimiento' %></h3>
-                                <span><%= ticket.fields.Fecha ? new Date(ticket.fields.Fecha).toLocaleDateString('es-ES') : 'Fecha no válida' %></span>
-                            </div>
-                             <div class="ticket-footer">
-                                <strong>Total: <%= (ticket.fields['Total Ticket'] || 0).toFixed(2) %> €</strong>
+                            <div class="ticket-info">
+                                <span class="ticket-establecimiento"><%= ticket.fields.Establecimiento || 'Sin Establecimiento' %></span>
+                                <span class="ticket-fecha"><%= ticket.fields.Fecha ? new Date(ticket.fields.Fecha).toLocaleDateString('es-ES') : 'Fecha no válida' %></span>
+                                <span class="ticket-total"><%= (ticket.total || 0).toFixed(2) %> €</span>
                             </div>
                         </a>
                     <% }); %>
                 <% } else { %>
-                    <p>Aún no has escaneado ningún ticket.</p>
+                    <p class="no-tickets">Aún no has escaneado ningún ticket.</p>
                 <% } %>
             </div>
         </main>

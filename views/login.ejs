@@ -7,16 +7,23 @@
     <link rel="stylesheet" href="<%= basePath %>/css/style.css">
 </head>
 <body>
-    <div class="container login-container">
-        <form action="<%= basePath %>/login" method="POST" class="login-form">
-            <h2>CAPTia</h2>
-            <p>Introduce la contraseña para continuar.</p>
-            <input type="password" name="password" placeholder="Contraseña" required>
-            <button type="submit">Entrar</button>
-            <% if (error) { %>
-                <p class="error-message"><%= error %></p>
-            <% } %>
-        </form>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <h1>CAPTia</h1>
+                <p>Escaner de tickets inteligente</p>
+            </div>
+            <form action="<%= basePath %>/login" method="POST" class="login-form">
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" name="password" placeholder="Introduce tu contraseña" required autofocus>
+                </div>
+                <button type="submit" class="btn-login">Acceder</button>
+                <% if (error) { %>
+                    <p class="error-message"><%= error %></p>
+                <% } %>
+            </form>
+        </div>
     </div>
 </body>
 </html>
