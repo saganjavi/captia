@@ -23,9 +23,9 @@
         </header>
 
         <main>
-            <div class="search-bar">
-                <input type="text" id="searchInput" placeholder="Buscar por establecimiento, fecha...">
-            </div>
+            <form action="<%= basePath %>/tickets" method="GET" class="search-bar">
+                <input type="text" name="search" id="searchInput" placeholder="Buscar por establecimiento, fecha..." value="<%= searchQuery %>">
+            </form>
 
             <div id="tickets-list">
                 <% if (tickets.length > 0) { %>
@@ -53,8 +53,11 @@
                     (<%= pagination.totalTickets %> tickets en total)
                 </div>
                 <div class="pagination-buttons">
+                    <%
+                        const searchParam = searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : '';
+                    %>
                     <% if (pagination.hasPrevPage) { %>
-                        <a href="<%= basePath %>/tickets?page=<%= pagination.currentPage - 1 %>" class="pagination-btn">
+                        <a href="<%= basePath %>/tickets?page=<%= pagination.currentPage - 1 %><%= searchParam %>" class="pagination-btn">
                             ← Anterior
                         </a>
                     <% } else { %>
@@ -65,14 +68,14 @@
                         <% if (i === pagination.currentPage) { %>
                             <span class="pagination-btn active"><%= i %></span>
                         <% } else if (i === 1 || i === pagination.totalPages || (i >= pagination.currentPage - 2 && i <= pagination.currentPage + 2)) { %>
-                            <a href="<%= basePath %>/tickets?page=<%= i %>" class="pagination-btn"><%= i %></a>
+                            <a href="<%= basePath %>/tickets?page=<%= i %><%= searchParam %>" class="pagination-btn"><%= i %></a>
                         <% } else if (i === pagination.currentPage - 3 || i === pagination.currentPage + 3) { %>
                             <span class="pagination-btn disabled">...</span>
                         <% } %>
                     <% } %>
 
                     <% if (pagination.hasNextPage) { %>
-                        <a href="<%= basePath %>/tickets?page=<%= pagination.currentPage + 1 %>" class="pagination-btn">
+                        <a href="<%= basePath %>/tickets?page=<%= pagination.currentPage + 1 %><%= searchParam %>" class="pagination-btn">
                             Siguiente →
                         </a>
                     <% } else { %>
@@ -95,47 +98,22 @@
             });
         }
 
-        document.getElementById('searchInput').addEventListener('keyup', function() {
-            let filter = this.value.toLowerCase();
-            let ticketsList = document.getElementById('tickets-list');
-            let cards = Array.from(document.querySelectorAll('.ticket-card'));
-            let paginationControls = document.getElementById('pagination-controls');
+        // Search submit on Enter or after delay
+        const searchInput = document.getElementById('searchInput');
+        let searchTimeout;
 
-            // Si hay búsqueda, ocultar controles de paginación
-            if (filter.length > 0 && paginationControls) {
-                paginationControls.style.display = 'none';
-            } else if (paginationControls) {
-                paginationControls.style.display = 'block';
+        searchInput.addEventListener('keyup', function(e) {
+            // Submit immediately on Enter
+            if (e.key === 'Enter') {
+                this.form.submit();
+                return;
             }
 
-            // Filtrar y ordenar
-            let filteredCards = cards.filter(card => {
-                let text = card.getAttribute('data-search-text');
-                return text.includes(filter);
-            });
-
-            // Ordenar por fecha descendente (más recientes primero)
-            filteredCards.sort((a, b) => {
-                let dateA = new Date(a.getAttribute('data-fecha'));
-                let dateB = new Date(b.getAttribute('data-fecha'));
-                return dateB - dateA; // Orden descendente
-            });
-
-            // Ocultar todas las tarjetas primero
-            cards.forEach(card => card.style.display = 'none');
-
-            // Reorganizar el DOM con las tarjetas filtradas y ordenadas
-            filteredCards.forEach(card => {
-                card.style.display = '';
-                ticketsList.appendChild(card);
-            });
-
-            // Añadir al final las tarjetas que no coinciden (ocultas)
-            cards.forEach(card => {
-                if (!filteredCards.includes(card)) {
-                    ticketsList.appendChild(card);
-                }
-            });
+            // Auto-submit after 1 second of no typing
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                this.form.submit();
+            }, 1000);
         });
     </script>
 </body>

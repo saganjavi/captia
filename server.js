@@ -142,22 +142,34 @@ app.get(`${basePath}/tickets`, requireLogin, async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const perPage = 10;
+        const searchQuery = req.query.search || '';
 
         // 1. Obtener TODOS los tickets (solo metadata, sin productos - rápido)
         const allTickets = await base(process.env.AIRTABLE_TICKETS_TABLE).select({
             sort: [{ field: "Fecha", direction: "desc" }]
         }).all();
 
-        // 2. Calcular paginación
-        const totalTickets = allTickets.length;
+        // 2. Filtrar por búsqueda si existe
+        let filteredTickets = allTickets;
+        if (searchQuery.trim().length > 0) {
+            const searchLower = searchQuery.toLowerCase();
+            filteredTickets = allTickets.filter(ticket => {
+                const establecimiento = (ticket.fields.Establecimiento || '').toLowerCase();
+                const fecha = ticket.fields.Fecha || '';
+                return establecimiento.includes(searchLower) || fecha.includes(searchLower);
+            });
+        }
+
+        // 3. Calcular paginación
+        const totalTickets = filteredTickets.length;
         const totalPages = Math.ceil(totalTickets / perPage);
         const startIndex = (page - 1) * perPage;
         const endIndex = startIndex + perPage;
 
-        // 3. Obtener SOLO los tickets de la página actual
-        const ticketsForPage = allTickets.slice(startIndex, endIndex);
+        // 4. Obtener SOLO los tickets de la página actual
+        const ticketsForPage = filteredTickets.slice(startIndex, endIndex);
 
-        // 4. Calcular totales SOLO para los tickets de esta página
+        // 5. Calcular totales SOLO para los tickets de esta página
         const ticketsWithTotal = await Promise.all(ticketsForPage.map(async (ticket) => {
             let total = 0;
             if (ticket.fields.Productos && ticket.fields.Productos.length > 0) {
@@ -179,6 +191,7 @@ app.get(`${basePath}/tickets`, requireLogin, async (req, res) => {
 
         res.render('tickets', {
             tickets: ticketsWithTotal,
+            searchQuery: searchQuery,
             pagination: {
                 currentPage: page,
                 totalPages: totalPages,
