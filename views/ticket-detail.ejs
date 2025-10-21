@@ -38,7 +38,7 @@
                         <% productos.forEach(prod => { %>
                             <li>
                                 <span class="prod-desc"><%= prod.Unidades %> x <%= prod.Producto %></span>
-                                <span class="prod-price"><%= (prod.Total_Linea || 0).toFixed(2) %> €</span>
+                                <span class="prod-price"><%= ((prod.Unidades || 0) * (prod.Precio_Unitario || 0)).toFixed(2) %> €</span>
                             </li>
                         <% }); %>
                     <% } else { %>
@@ -47,7 +47,14 @@
                 </ul>
             </div>
             <div class="ticket-footer">
-                <strong>Total: <%= (ticket['Total Ticket'] || 0).toFixed(2) %> €</strong>
+                <strong>Total: <%= (ticket.total || 0).toFixed(2) %> €</strong>
+            </div>
+
+            <div style="margin-top: 20px; text-align: center;">
+                <form action="<%= basePath %>/ticket/<%= ticket.id %>/delete" method="POST" onsubmit="return confirm('¿Estás seguro de que quieres borrar este ticket? Esta acción no se puede deshacer.');" style="display: inline;">
+                    <button type="submit" class="delete-btn">Borrar Ticket</button>
+                </form>
+                <a href="<%= basePath %>/tickets" class="back-btn">Volver a Mis Tickets</a>
             </div>
         </main>
     </div>

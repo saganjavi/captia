@@ -657,3 +657,123 @@ body {
         background-color: var(--card-bg);
     }
 }
+
+/* Delete and Back Button Styles */
+.delete-btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+    background-color: #dc2626;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    margin-right: 0.5rem;
+}
+
+.delete-btn:hover {
+    background-color: #b91c1c;
+}
+
+.delete-btn:active {
+    transform: scale(0.98);
+}
+
+.back-btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-color);
+    background-color: var(--card-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    margin-left: 0.5rem;
+}
+
+.back-btn:hover {
+    background-color: var(--bg-color);
+    border-color: var(--primary-blue);
+    color: var(--primary-blue);
+}
+
+.back-btn:active {
+    transform: scale(0.98);
+}
+
+/* Detail Card Styles */
+.detail-card {
+    background-color: var(--card-bg);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+}
+
+.detail-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.detail-header h2 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+}
+
+.detail-header p {
+    font-size: 1rem;
+    color: var(--text-light);
+}
+
+.product-list-header {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 1rem;
+}
+
+.ticket-body ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.ticket-body li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.875rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.ticket-body li:last-child {
+    border-bottom: none;
+}
+
+.prod-desc {
+    font-size: 1rem;
+    color: var(--text-color);
+}
+
+.prod-price {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--primary-blue);
+}
+
+.ticket-footer {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 2px solid var(--border-color);
+    text-align: right;
+}
+
+.ticket-footer strong {
+    font-size: 1.5rem;
+    color: var(--text-color);
+}

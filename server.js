@@ -125,15 +125,53 @@ app.get(`${basePath}/ticket/:id`, requireLogin, async (req, res) => {
     try {
         const ticket = await base(process.env.AIRTABLE_TICKETS_TABLE).find(req.params.id);
         const lineas_ticket = [];
+        let total = 0;
+
         if (ticket.get('Productos')) {
             const lineasPromises = ticket.get('Productos').map(id => base(process.env.AIRTABLE_LINES_TABLE).find(id));
             const resolvedLineas = await Promise.all(lineasPromises);
-            resolvedLineas.forEach(linea => lineas_ticket.push(linea.fields));
+            resolvedLineas.forEach(linea => {
+                lineas_ticket.push(linea.fields);
+                // Calcular total sumando (Unidades * Precio_Unitario) de cada producto
+                const unidades = linea.fields.Unidades || 0;
+                const precioUnitario = linea.fields.Precio_Unitario || 0;
+                total += unidades * precioUnitario;
+            });
         }
-        res.render('ticket-detail', { ticket: { id: ticket.id, ...ticket.fields }, productos: lineas_ticket });
+
+        res.render('ticket-detail', {
+            ticket: { id: ticket.id, ...ticket.fields, total: total },
+            productos: lineas_ticket
+        });
     } catch (error) {
         console.error("Error al obtener el detalle del ticket:", error);
         res.status(404).send("Ticket no encontrado.");
+    }
+});
+
+// Ruta para borrar un ticket
+app.post(`${basePath}/ticket/:id/delete`, requireLogin, async (req, res) => {
+    try {
+        const ticketId = req.params.id;
+        const ticket = await base(process.env.AIRTABLE_TICKETS_TABLE).find(ticketId);
+
+        // Borrar primero todos los productos asociados al ticket
+        if (ticket.get('Productos') && ticket.get('Productos').length > 0) {
+            const productIds = ticket.get('Productos');
+            // Airtable permite borrar hasta 10 registros a la vez
+            for (let i = 0; i < productIds.length; i += 10) {
+                const chunk = productIds.slice(i, i + 10);
+                await base(process.env.AIRTABLE_LINES_TABLE).destroy(chunk);
+            }
+        }
+
+        // Luego borrar el ticket
+        await base(process.env.AIRTABLE_TICKETS_TABLE).destroy(ticketId);
+
+        res.redirect(`${basePath}/tickets`);
+    } catch (error) {
+        console.error("Error al borrar el ticket:", error);
+        res.status(500).send("Error al borrar el ticket.");
     }
 });
 
